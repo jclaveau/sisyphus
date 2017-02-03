@@ -1,7 +1,7 @@
 /**
  * Plugin developed to save html forms data to LocalStorage to restore them after browser crashes, tabs closings
- * and other disasters. 
- * 
+ * and other disasters.
+ *
  * https://github.com/simsalabim/sisyphus
  *
  * @author Alexander Kaupanin <kaupanin@gmail.com>
@@ -11,7 +11,7 @@
 ( function( $ ) {
 
 	function getElementIdentifier(el) {
-			return '[id=' + el.attr( "id" ) + '][name=' + el.attr( "name" ) + ']';
+		return '[id=' + el.attr( "id" ) + '][name=' + el.attr( "name" ) + ']';
 	}
 
 	$.fn.sisyphus = function( options ) {
@@ -148,6 +148,22 @@
 				},
 
 				/**
+				 * Generates form identifier
+				 *
+				 * @param [Object] targets		form object, result of jQuery selector
+				 *
+				 * @return string
+				 */
+				getFormIdentifier: function (el) {
+					if (this.options.formIdentifier) {
+						return this.options.formIdentifier( el );
+					}
+					else {
+						return getElementIdentifier( el );
+					}
+				},
+
+				/**
 				 * Protect specified forms, store it's fields data to local storage and restore them on page load
 				 *
 				 * @param [Object] targets		forms object(s), result of jQuery selector
@@ -230,7 +246,8 @@
 					}
 
 					self.targets.each( function() {
-						var targetFormIdAndName = getElementIdentifier( $( this ) );
+						var targetFormIdAndName = self.getFormIdentifier( $( this ) );
+
 						self.findFieldsToProtect( $( this ) ).each( function() {
 							if ( $.inArray( this, self.options.excludeFields ) !== -1 ) {
 								// Returning non-false is the same as a continue statement in a for loop; it will skip immediately to the next iteration.
@@ -258,7 +275,7 @@
 				saveAllData: function() {
 					var self = this;
 					self.targets.each( function() {
-						var targetFormIdAndName = getElementIdentifier( $( this ) );
+						var targetFormIdAndName = self.getFormIdentifier( $( this ) );
 						var multiCheckboxCache = {};
 
 						self.findFieldsToProtect( $( this) ).each( function() {
@@ -267,7 +284,12 @@
 								// Returning non-false is the same as a continue statement in a for loop; it will skip immediately to the next iteration.
 								return true;
 							}
-							var prefix = (self.options.locationBased ? self.href : "") + targetFormIdAndName + getElementIdentifier( field ) + self.options.customKeySuffix;
+
+							var prefix = (self.options.locationBased ? self.href : "")
+								+ targetFormIdAndName
+								+ getElementIdentifier( field )
+								+ self.options.customKeySuffix;
+
 							var value = field.val();
 
 							if ( field.is(":checkbox") ) {
@@ -319,7 +341,7 @@
 
 					self.targets.each( function() {
 						var target = $( this );
-						var targetFormIdAndName = getElementIdentifier( $( this ) );
+						var targetFormIdAndName = self.getFormIdentifier( $( this ) );
 
 						self.findFieldsToProtect( target ).each( function() {
 							if ( $.inArray( this, self.options.excludeFields ) !== -1 ) {
@@ -327,8 +349,12 @@
 								return true;
 							}
 							var field = $( this );
-							var prefix = (self.options.locationBased ? self.href : "") + targetFormIdAndName + getElementIdentifier( field ) + self.options.customKeySuffix;
+							var prefix = (self.options.locationBased ? self.href : "")
+								+ targetFormIdAndName
+								+ getElementIdentifier( field )
+								+ self.options.customKeySuffix;
 							var resque = self.browserStorage.get( prefix );
+
 							if ( resque !== null ) {
 								self.restoreFieldsData( field, resque );
 								restored = true;
@@ -414,7 +440,7 @@
 				 */
 				saveToBrowserStorage: function( key, value, fireCallback ) {
 					var self = this;
-					
+
 					var callback_result = self.options.onBeforeSave.call( self );
 					if ( callback_result !== undefined && callback_result === false ) {
 						return;
@@ -468,7 +494,7 @@
 					var self = this;
 					self.targets.each( function() {
 						var target = $( this );
-						var formIdAndName = getElementIdentifier( target );
+						var formIdAndName = self.getFormIdentifier( $( this ) );
 						$( this ).bind( "submit reset", function() {
 							self.releaseData( formIdAndName, self.findFieldsToProtect( target ) );
 						} );
